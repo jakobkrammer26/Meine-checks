@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Erzähl uns von dir</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0f2a28;
+    color: #f4ede0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  body::before, body::after {
+    content: "";
+    position: absolute;
+    width: 380px;
+    height: 380px;
+    border-radius: 50%;
+    background: #c98a4b;
+    opacity: 0.10;
+    filter: blur(80px);
+  }
+  body::before { top: -120px; left: -120px; }
+  body::after { bottom: -120px; right: -120px; }
+
+  .card { position: relative; z-index: 1; max-width: 460px; width: 100%; }
+
+  .eyebrow {
+    font-size: 12px; letter-spacing: 3px; text-transform: uppercase;
+    color: #c98a4b; margin-bottom: 14px;
+  }
+  h1 {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 40px; line-height: 1.2; margin: 0 0 18px;
+  }
+  .lead { color: rgba(244,237,224,0.7); font-size: 16px; line-height: 1.6; margin-bottom: 36px; }
+
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #c98a4b; color: #0f2a28; border: none;
+    font-weight: 600; font-size: 15px; padding: 14px 26px;
+    border-radius: 999px; cursor: pointer; transition: background 0.2s;
+  }
+  .btn-primary:hover { background: #e0a562; }
+  .btn-primary:disabled { background: rgba(244,237,224,0.15); color: rgba(244,237,224,0.3); cursor: not-allowed; }
+
+  .progress-track { display: flex; gap: 6px; margin-bottom: 40px; }
+  .progress-seg { height: 3px; flex: 1; background: rgba(244,237,224,0.15); border-radius: 3px; transition: background 0.3s; }
+  .progress-seg.active { background: #c98a4b; }
+
+  .step-label { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: rgba(244,237,224,0.45); margin-bottom: 12px; }
+  .question { font-family: Georgia, 'Times New Roman', serif; font-size: 32px; line-height: 1.3; margin: 0 0 36px; }
+
+  input[type="text"] {
+    width: 100%; background: transparent; border: none;
+    border-bottom: 2px solid rgba(244,237,224,0.25);
+    color: #f4ede0; font-size: 24px; padding: 10px 0; outline: none;
+    transition: border-color 0.2s;
+  }
+  input[type="text"]::placeholder { color: rgba(244,237,224,0.25); }
+  input[type="text"]:focus { border-color: #c98a4b; }
+
+  .yesno { display: flex; gap: 12px; }
+  .yesno button {
+    flex: 1; padding: 16px; border-radius: 12px;
+    border: 1px solid rgba(244,237,224,0.25); background: transparent;
+    color: rgba(244,237,224,0.85); font-size: 17px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .yesno button:hover { border-color: rgba(244,237,224,0.5); }
+  .yesno button.selected { background: #c98a4b; border-color: #c98a4b; color: #0f2a28; }
+
+  .nav-row { display: flex; align-items: center; justify-content: space-between; margin-top: 48px; }
+  .btn-back { background: none; border: none; color: rgba(244,237,224,0.5); font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+  .btn-back:hover { color: rgba(244,237,224,0.9); }
+  .btn-back.hidden { visibility: hidden; }
+
+  .done-icon {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: rgba(201,138,75,0.2); border: 1px solid rgba(201,138,75,0.4);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 24px; font-size: 26px; color: #c98a4b;
+  }
+  .center { text-align: center; }
+  .hidden { display: none !important; }
+  .status-msg { font-size: 13px; color: rgba(244,237,224,0.4); margin-top: 16px; }
+  .status-msg.error { color: #e07a5f; }
+
+  a.admin-link {
+    position: absolute; top: 20px; right: 24px; z-index: 5;
+    font-size: 12px; color: rgba(244,237,224,0.4); text-decoration: none;
+  }
+  a.admin-link:hover { color: rgba(244,237,224,0.8); }
+</style>
+</head>
+<body>
+
+<a href="/admin.html" class="admin-link">🔒 Übersicht</a>
+
+<div class="card">
+
+  <div id="viewIntro" class="center">
+    <p class="eyebrow">Ein kurzes Interview</p>
+    <h1>Erzähl uns von dir</h1>
+    <p class="lead">Fünf kurze Fragen, eine nach der anderen. Dauert unter eine Minute.</p>
+    <button class="btn-primary" onclick="startSurvey()">Los geht's →</button>
+  </div>
+
+  <div id="viewSurvey" class="hidden">
+    <div class="progress-track" id="progressTrack"></div>
+    <p class="step-label" id="stepLabel"></p>
+    <h2 class="question" id="questionText"></h2>
+    <div id="inputArea"></div>
+    <div class="nav-row">
+      <button class="btn-back" id="btnBack" onclick="goBack()">← Zurück</button>
+      <button class="btn-primary" id="btnNext" onclick="goNext()" disabled>Weiter</button>
+    </div>
+  </div>
+
+  <div id="viewDone" class="hidden center">
+    <div class="done-icon">✓</div>
+    <h1 style="font-size:30px;">Danke dir!</h1>
+    <p class="lead" id="doneLead">Deine Antworten wurden gespeichert.</p>
+    <p class="status-msg" id="doneStatus"></p>
+    <button class="btn-primary" onclick="restart()" style="margin-top:8px;">Noch einmal ausfüllen</button>
+  </div>
+
+</div>
+
+<script>
+  const QUESTIONS = [
+    { id: "name", type: "text", label: "Wie heißt du?", placeholder: "Dein Name" },
+    { id: "age", type: "text", label: "Wie alt bist du?", placeholder: "z. B. 27" },
+    { id: "hobby", type: "text", label: "Was ist dein Hobby?", placeholder: "z. B. Klettern" },
+    { id: "pets", type: "yesno", label: "Hast du ein Haustier?" },
+    { id: "travel", type: "yesno", label: "Reist du gerne?" },
+  ];
+
+  let step = 0;
+  let answers = {};
+
+  function startSurvey() {
+    document.getElementById('viewIntro').classList.add('hidden');
+    document.getElementById('viewSurvey').classList.remove('hidden');
+    renderStep();
+  }
+
+  function renderProgress() {
+    const track = document.getElementById('progressTrack');
+    track.innerHTML = '';
+    QUESTIONS.forEach((_, i) => {
+      const seg = document.createElement('div');
+      seg.className = 'progress-seg' + (i <= step ? ' active' : '');
+      track.appendChild(seg);
+    });
+  }
+
+  function renderStep() {
+    const q = QUESTIONS[step];
+    renderProgress();
+    document.getElementById('stepLabel').textContent = `Frage ${step + 1} von ${QUESTIONS.length}`;
+    document.getElementById('questionText').textContent = q.label;
+
+    const area = document.getElementById('inputArea');
+    area.innerHTML = '';
+
+    if (q.type === 'text') {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = q.placeholder;
+      input.value = answers[q.id] || '';
+      input.addEventListener('input', () => {
+        answers[q.id] = input.value;
+        updateNextButton();
+      });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !document.getElementById('btnNext').disabled) goNext();
+      });
+      area.appendChild(input);
+      setTimeout(() => input.focus(), 50);
+    } else if (q.type === 'yesno') {
+      const wrap = document.createElement('div');
+      wrap.className = 'yesno';
+      ['ja', 'nein'].forEach(opt => {
+        const btn = document.createElement('button');
+        btn.textContent = opt.charAt(0).toUpperCase() + opt.slice(1);
+        if (answers[q.id] === opt) btn.classList.add('selected');
+        btn.onclick = () => { answers[q.id] = opt; renderStep(); };
+        wrap.appendChild(btn);
+      });
+      area.appendChild(wrap);
+    }
+
+    document.getElementById('btnBack').classList.toggle('hidden', step === 0);
+    document.getElementById('btnNext').textContent = step === QUESTIONS.length - 1 ? 'Absenden' : 'Weiter';
+    updateNextButton();
+  }
+
+  function updateNextButton() {
+    const q = QUESTIONS[step];
+    const val = answers[q.id];
+    const filled = q.type === 'text' ? (val && val.trim().length > 0) : (val === 'ja' || val === 'nein');
+    document.getElementById('btnNext').disabled = !filled;
+  }
+
+  function goBack() { if (step > 0) { step--; renderStep(); } }
+
+  async function goNext() {
+    if (step < QUESTIONS.length - 1) {
+      step++;
+      renderStep();
+    } else {
+      await submitEntry();
+    }
+  }
+
+  async function submitEntry() {
+    document.getElementById('viewSurvey').classList.add('hidden');
+    document.getElementById('viewDone').classList.remove('hidden');
+    const statusEl = document.getElementById('doneStatus');
+    const leadEl = document.getElementById('doneLead');
+    statusEl.textContent = 'Speichere…';
+
+    try {
+      const res = await fetch('/api/entries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(answers)
+      });
+      if (res.ok) {
+        leadEl.textContent = 'Deine Antworten wurden gespeichert.';
+        statusEl.textContent = '';
+        statusEl.classList.remove('error');
+      } else {
+        throw new Error('Server antwortete mit Fehler');
+      }
+    } catch (err) {
+      console.error(err);
+      leadEl.textContent = 'Etwas ist schiefgelaufen.';
+      statusEl.textContent = 'Speichern fehlgeschlagen. Bitte später erneut versuchen.';
+      statusEl.classList.add('error');
+    }
+  }
+
+  function restart() {
+    step = 0;
+    answers = {};
+    document.getElementById('viewDone').classList.add('hidden');
+    document.getElementById('viewIntro').classList.remove('hidden');
+  }
+</script>
+
+</body>
+</html>
